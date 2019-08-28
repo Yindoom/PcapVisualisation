@@ -74,6 +74,7 @@ def pcap():
 
             #Used to group packets by second, if the timestamp is properly new, a new array is added to the key
             time = datetime.datetime.utcfromtimestamp(ts)
+
             newTime = str(datetime.datetime(time.year, time.month, time.day, time.hour, time.minute, time.second))
             if newTime not in packets:
                 packets[newTime] = []

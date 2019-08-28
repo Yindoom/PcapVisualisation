@@ -34,53 +34,55 @@ function sendRequest(file) {
 }
 
 function showDataOnPage(json) { 
-    let data = JSON.parse(json);
-    let addressPoints = getAddressPoints(data['addresses']);
-    let packets = data['packets'];
-    //let packetsValues = Object.values(data['packets']);
-    let packetsKeys = Object.keys(data['packets']);
+    const data = JSON.parse(json);
+    const addressPoints = getAddressPoints(data['addresses']);
+    const packets = data['packets'];
+    const packetsKeys = Object.keys(data['packets']);
+
+    const svgSize = 500;
+
+    const scale = d3.scaleLinear();
+    scale.domain([0, 1]).range([10, svgSize - 10]);
+
     packetsKeys.forEach(key => {
-        plotPoints(addressPoints, packets[key])
-    });
-}
-
-function plotPoints(addressPoints, packets) {
-    
-    const svgSize = 500, circSize = 10;
-
-    const axisScale = d3.scaleLinear();
-    axisScale.domain([0, 1]).range([10, svgSize-10]);
-
-    const svg = d3.select('body').append('svg')
+        let svg = d3.select('body').append('svg')
         .attr('width', svgSize)
         .attr('height', svgSize);
 
-    const thing = svg.selectAll('circle').data(packets).enter();
+        plotPoints(addressPoints, packets[key], svg, scale);
+        drawLines(addressPoints, packets[key], svg, scale);
+    });
+}
+
+function plotPoints(addressPoints, packets, svg, scale) {
+    
+    const circSize = 5;
+
+    const circles = svg.selectAll('circle').data(packets).enter();
         
-    thing.append('circle').attr('cx', d => {
-            debugger;
+    circles.append('circle').attr('cx', d => {
             add = d['src'];
             points = addressPoints[add];
-            return axisScale(points['x']);
+            return scale(points['x']);
         })
         .attr('cy', d => {
             add = d['src'];
             points = addressPoints[add];
-            return axisScale(points['y']);
+            return scale(points['y']);
         })
         .attr('r', () => {
             return circSize;
         });
         
-        thing.append('circle').attr('cx', d => {
+        circles.append('circle').attr('cx', d => {
             add = d['dst'];
             points = addressPoints[add];
-            return axisScale(points['x']);
+            return scale(points['x']);
         })
         .attr('cy', d => {
             add = d['dst'];
             points = addressPoints[add];
-            return axisScale(points['y']);
+            return scale(points['y']);
         })
         .attr('r', () => {
             return circSize;
@@ -88,17 +90,45 @@ function plotPoints(addressPoints, packets) {
 
 }
 
+function drawLines(addressPoints, packets, svg, scale) {
+    const stroke = 2;
+
+    const lines = svg.selectAll('line').data(packets).enter()
+        .append('line').attr('y1', d => {
+             add = d["src"];
+             points = addressPoints[add];
+             return scale(points["y"]);
+        })
+        .attr('x1', d => {
+             add = d["src"];
+             points = addressPoints[add];
+             return scale(points["x"]);
+        })
+        .attr('y2', d => {
+             add = d["dst"];
+             points = addressPoints[add];
+             return scale(points["y"]);
+        })
+        .attr('x2', d => {
+             add = d["dst"];
+             points = addressPoints[add];
+             return scale(points["x"]);
+        })
+        .style('stroke', 'light-green').style('stroke-width', stroke);
+
+}
+
 function getAddressPoints(addresses) {
     let addressPoints = {}
+    let x;
+    let y;
     addresses.forEach(address => {
-        let x = Math.random();
-        while(x > 0.4 && x < 0.6) {
+        do { 
             x = Math.random();
-        }
-        let y = Math.random();
-        while (y > 0.4 && y < 0.6) {
             y = Math.random();
-        }
+            debugger;
+        } while(x < 0.6 && x > 0.4 && y < 0.6 && y > 0.4)
+       
         addressPoints[address] = {'y': y,'x': x};
     });
 
