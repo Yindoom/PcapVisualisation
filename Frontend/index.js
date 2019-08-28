@@ -89,20 +89,20 @@ function plotPoints(addressPoints, packets) {
 }
 
 function getAddressPoints(addresses) {
-    let addressPoints = {}
-    addresses.forEach(address => {
-        let x = Math.random();
-        while(x > 0.4 && x < 0.6) {
-            x = Math.random();
-        }
-        let y = Math.random();
-        while (y > 0.4 && y < 0.6) {
-            y = Math.random();
-        }
-        addressPoints[address] = {'y': y,'x': x};
+     let addressPoints = {};
+     let x;
+     let y;
+     addresses.forEach(address => {
+       do {
+        x = Math.random();
+        y = Math.random();
+        debugger;
+       } while (x < 0.6 && x > 0.4 && y < 0.6 && y > 0.4);
+
+        addressPoints[address] = { y: y, x: x };
     });
 
-    addressPoints[addresses[0]] = {'y': 0.5, 'x': 0.5};
+    addressPoints[addresses[0]] = { y: 0.5, x: 0.5 };
 
     return addressPoints;
 }
