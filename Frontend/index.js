@@ -114,7 +114,7 @@ function drawLines(addressPoints, packets, svg, scale) {
              points = addressPoints[add];
              return scale(points["x"]);
         })
-        .style('stroke', 'light-green').style('stroke-width', stroke);
+        .style('stroke', 'lightgreen').style('stroke-width', stroke);
 
 }
 
