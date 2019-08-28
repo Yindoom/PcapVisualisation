@@ -33,9 +33,12 @@ def pcap():
         else:
             pcp = dpkt.pcap.Reader(data)
 
-        addresses = ['placeholder']
+        addresses = []
         packets = {}
+        length = 0 
         for ts, buf in pcp:
+            length += 1
+            print(length)
             try:
                 eth = dpkt.ethernet.Ethernet(buf)
             except:

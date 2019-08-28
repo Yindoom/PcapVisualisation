@@ -33,13 +33,63 @@ function sendRequest(file) {
     })
 }
 
-function showDataOnPage(json) {
-    debugger;
+function showDataOnPage(json) { 
     let data = JSON.parse(json);
-    let addresses = data['addresses'];
-    let packetsValues = Object.values(data['packets']);
+    let addressPoints = getAddressPoints(data['addresses']);
+    let packets = data['packets'];
+    //let packetsValues = Object.values(data['packets']);
     let packetsKeys = Object.keys(data['packets']);
-    console.log(valArr);
-    plotPoints()
+    packetsKeys.forEach(key => {
+        plotPoints(addressPoints, packets[key])
+    });
 }
 
+function plotPoints(addressPoints, packets) {
+    
+    const svgSize = 500, circSize = 10;
+
+    const axisScale = d3.scaleLinear();
+    axisScale.domain([0, 1]).range([10, svgSize-10]);
+
+    const svg = d3.select('body').append('svg')
+        .attr('width', svgSize)
+        .attr('height', svgSize);
+
+    svg.selectAll('circle').data(packets).enter()
+        .append('circle').attr('cx', d => {
+            debugger;
+            add = d['src'];
+            points = addressPoints[add];
+            console.log(points['x']);
+            console.log(axisScale(points['x']));
+            return axisScale(points['x']);
+        })
+        .attr('cy', d => {
+            add = d['src'];
+            points = addressPoints[add];
+            return axisScale(points['y']);
+        })
+        .attr('r', () => {
+            return circSize;
+        })
+
+}
+
+function getAddressPoints(addresses) {
+    let addressPoints = {}
+    addresses.forEach(address => {
+        let x = Math.random();
+        while(x === 0.5) {
+            x = Math.random();
+        }
+        let y = Math.random();
+        while(y === 0.5) {
+            y = Math.random();
+        }
+        addressPoints[address] = {'y': y,'x': x};
+    });
+
+    addressPoints[addresses[0]] = {'y': 0.5, 'x': 0.5};
+
+    return addressPoints;
+}
