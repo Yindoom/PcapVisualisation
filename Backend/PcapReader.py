@@ -5,12 +5,13 @@ import datetime
 import socket
 
 
-
+#Converts the encoded ip, or whatever, to readable string
 def inet_to_str(inet):
     try:
         return socket.inet_ntop(socket.AF_INET, inet)
     except ValueError:
         return socket.inet_ntop(socket.AF_INET6, inet)
+
 
 app = Flask(__name__)
 CORS(app)
@@ -28,6 +29,8 @@ def pcap():
         print(filetype)
         data = request.files['pcap-file']
         print('Reading data with dpkt')
+
+        #pcap has at least two different file types, which require different readers
         if filetype == 'pcapng':
             pcp = dpkt.pcapng.Reader(data)
         else:
@@ -37,8 +40,11 @@ def pcap():
         packets = {}
         length = 0 
         for ts, buf in pcp:
-            length += 1
+            length += 1         #shrug
             print(length)
+
+            #I had some issues with a PCAP file that gave errors, 
+            #so to see which packets gave errors, I added the try catch
             try:
                 eth = dpkt.ethernet.Ethernet(buf)
             except:
@@ -55,6 +61,7 @@ def pcap():
             src = inet_to_str(ip.src)
             dst = inet_to_str(ip.dst)
 
+            #Collects all the ip addresses, to let us give each address an X and Y in JS
             if src not in addresses:
                 addresses.append(src)
             if dst not in addresses:
@@ -65,6 +72,7 @@ def pcap():
                 'dst': dst
             }
 
+            #Used to group packets by second, if the timestamp is properly new, a new array is added to the key
             time = datetime.datetime.utcfromtimestamp(ts)
             newTime = str(datetime.datetime(time.year, time.month, time.day, time.hour, time.minute, time.second))
             if newTime not in packets:

@@ -55,17 +55,30 @@ function plotPoints(addressPoints, packets) {
         .attr('width', svgSize)
         .attr('height', svgSize);
 
-    svg.selectAll('circle').data(packets).enter()
-        .append('circle').attr('cx', d => {
+    const thing = svg.selectAll('circle').data(packets).enter();
+        
+    thing.append('circle').attr('cx', d => {
             debugger;
             add = d['src'];
             points = addressPoints[add];
-            console.log(points['x']);
-            console.log(axisScale(points['x']));
             return axisScale(points['x']);
         })
         .attr('cy', d => {
             add = d['src'];
+            points = addressPoints[add];
+            return axisScale(points['y']);
+        })
+        .attr('r', () => {
+            return circSize;
+        });
+        
+        thing.append('circle').attr('cx', d => {
+            add = d['dst'];
+            points = addressPoints[add];
+            return axisScale(points['x']);
+        })
+        .attr('cy', d => {
+            add = d['dst'];
             points = addressPoints[add];
             return axisScale(points['y']);
         })
@@ -79,11 +92,11 @@ function getAddressPoints(addresses) {
     let addressPoints = {}
     addresses.forEach(address => {
         let x = Math.random();
-        while(x === 0.5) {
+        while(x > 0.4 && x < 0.6) {
             x = Math.random();
         }
         let y = Math.random();
-        while(y === 0.5) {
+        while (y > 0.4 && y < 0.6) {
             y = Math.random();
         }
         addressPoints[address] = {'y': y,'x': x};
