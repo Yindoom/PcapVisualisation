@@ -78,7 +78,7 @@ function checkNumberofSimilarPackets(packet1, packet2) {
 } 
 function plotPoints(addressPoints, packets, svg, scale) {
     
-    const circSize = 5;
+    const circSize = 2;
 
     const circles = svg.selectAll('circle').data(packets).enter();
         
@@ -106,14 +106,14 @@ function plotPoints(addressPoints, packets, svg, scale) {
             points = addressPoints[add];
             return scale(points['y']);
         })
-        .attr('r', () => {
-            return circSize;
+        .attr('r', d => {
+            return d['size']*circSize;
         })
 
 }
 
 function drawLines(addressPoints, packets, svg, scale) {
-    const stroke = 0.1;
+    const stroke = 1;
 
     const lines = svg.selectAll('line').data(packets).enter()
         .append('line').attr('y1', d => {
@@ -137,7 +137,7 @@ function drawLines(addressPoints, packets, svg, scale) {
              return scale(points["x"]);
         })
         .style('stroke', 'lightgreen').style('stroke-width', d => {
-            return stroke*d['size'];
+            return stroke;
         });
 
 }
