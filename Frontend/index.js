@@ -18,7 +18,6 @@ function fileAsFormdata(file) {
 }
 
 function sendRequest(file) {
-    console.log('sending file');
     fetch('http://localhost:5000/pcap', {
 
         method: 'POST',
@@ -27,8 +26,6 @@ function sendRequest(file) {
     }).then(function (response) {
         return response.text();
     }).then(function (data) {
-        console.log('GET STUFF');
-        console.log(data);
         showDataOnPage(data);
     })
 }
@@ -36,7 +33,7 @@ function sendRequest(file) {
 function showDataOnPage(json) { 
     const data = JSON.parse(json);
     const addressPoints = getAddressPoints(data['addresses']);
-    const packets = data['packets'];
+    const packetsCollection = data['packets'];
     const packetsKeys = Object.keys(data['packets']);
 
     const svgSize = 500;
@@ -45,15 +42,40 @@ function showDataOnPage(json) {
     scale.domain([0, 1]).range([10, svgSize - 10]);
 
     packetsKeys.forEach(key => {
+        let packets = getPacketsWithStrokeSize(packetsCollection[key]);
+        
         let svg = d3.select('body').append('svg')
         .attr('width', svgSize)
         .attr('height', svgSize);
-
-        plotPoints(addressPoints, packets[key], svg, scale);
-        drawLines(addressPoints, packets[key], svg, scale);
+        plotPoints(addressPoints, packets, svg, scale);
+        drawLines(addressPoints, packets, svg, scale);
     });
 }
 
+function getPacketsWithStrokeSize(packets) {
+    packets.forEach(packet1 => {
+        let size = 0;
+        packets.forEach(packet2 => {
+            if (checkNumberofSimilarPackets(packet1, packet2)){
+                size++;
+            }
+        });
+        packet1['size'] = size;
+    });
+    return packets;
+}
+
+function checkNumberofSimilarPackets(packet1, packet2) {
+    if(packet1['src'] == packet2['src'] && packet1['dst'] == packet2['dst']){
+        return true;
+    }
+        
+    if(packet1['src'] == packet2['dst'] && packet1['dst'] == packet2['src']){
+        return true;
+    }
+        
+    return false;
+} 
 function plotPoints(addressPoints, packets, svg, scale) {
     
     const circSize = 5;
@@ -91,7 +113,7 @@ function plotPoints(addressPoints, packets, svg, scale) {
 }
 
 function drawLines(addressPoints, packets, svg, scale) {
-    const stroke = 2;
+    const stroke = 0.1;
 
     const lines = svg.selectAll('line').data(packets).enter()
         .append('line').attr('y1', d => {
@@ -114,7 +136,9 @@ function drawLines(addressPoints, packets, svg, scale) {
              points = addressPoints[add];
              return scale(points["x"]);
         })
-        .style('stroke', 'lightgreen').style('stroke-width', stroke);
+        .style('stroke', 'lightgreen').style('stroke-width', d => {
+            return stroke*d['size'];
+        });
 
 }
 
@@ -126,7 +150,7 @@ function getAddressPoints(addresses) {
         do { 
             x = Math.random();
             y = Math.random();
-            debugger;
+
         } while(x < 0.6 && x > 0.4 && y < 0.6 && y > 0.4)
        
         addressPoints[address] = {'y': y,'x': x};

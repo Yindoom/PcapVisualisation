@@ -38,7 +38,9 @@ def pcap():
 
         addresses = []
         packets = {}
+        oldTime = 0
         length = 0 
+        time = 0
         for ts, buf in pcp:
             length += 1         #shrug
             print(length)
@@ -73,13 +75,21 @@ def pcap():
             }
 
             #Used to group packets by second, if the timestamp is properly new, a new array is added to the key
-            time = datetime.datetime.utcfromtimestamp(ts)
 
-            newTime = str(datetime.datetime(time.year, time.month, time.day, time.hour, time.minute, time.second))
-            if newTime not in packets:
-                packets[newTime] = []
+            newTime = datetime.datetime.utcfromtimestamp(ts)
 
-            packets[newTime].append(packet)
+            if oldTime == 0:
+                oldTime = newTime
+                time = str(oldTime)
+                packets[time] = []
+                
+            delta = newTime - oldTime
+
+            if delta.seconds >= 5:
+                oldTime = newTime
+                time = str(oldTime)
+                packets[time] = []
+            packets[time].append(packet)
 
         responseData = {
             'addresses': addresses,
