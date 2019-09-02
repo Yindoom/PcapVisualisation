@@ -53,19 +53,52 @@ function showDataOnPage(json) {
 }
 
 function getPacketsWithStrokeSize(packets) {
+    let checkedPackets = [];
     packets.forEach(packet1 => {
-        let size = 0;
-        packets.forEach(packet2 => {
-            if (checkNumberofSimilarPackets(packet1, packet2)){
-                size++;
-            }
-        });
-        packet1['size'] = size;
-    });
-    return packets;
+    
+        let checked = false;
+        if(checkedPackets.length > 0) {
+            checkedPackets.forEach(checkedPacket => {
+                if(checkPacketSimilarity(packet1, checkedPacket)) {
+                    checked = true;
+                    return;
+                } 
+            });
+        }
+
+        if(!checked) {
+            let size = 0;
+            let colourRef = 0;
+            packets.forEach(packet2 => {
+                if (checkPacketSimilarity(packet1, packet2)){
+                    size += 0.1;
+                    colourRef++;
+                }
+            });
+            packet1['size'] = size;
+            packet1['colour'] = getLineColour(colourRef);
+            checkedPackets.push(packet1);
+        }
+    })
+    return checkedPackets;
 }
 
-function checkNumberofSimilarPackets(packet1, packet2) {
+function getLineColour(colourRef) {
+    debugger;
+    const colourSelection = colourConf4();
+    if(colourRef < 2) 
+        return colourSelection['low'];
+    if(colourRef >= 2 && colourRef < 5)
+        return colourSelection['lowMedium'];
+    if(colourRef >= 5 && colourRef < 10)
+        return colourSelection['medium'];
+    if(colourRef >= 10 && colourRef < 20)
+        return colourSelection['highMedium'];
+    if(colourRef >= 20)
+        return colourSelection['high'];
+}
+
+function checkPacketSimilarity(packet1, packet2) {
     if(packet1['src'] == packet2['src'] && packet1['dst'] == packet2['dst']){
         return true;
     }
@@ -76,6 +109,7 @@ function checkNumberofSimilarPackets(packet1, packet2) {
         
     return false;
 } 
+
 function plotPoints(addressPoints, packets, svg, scale) {
     
     const circSize = 5;
@@ -113,7 +147,7 @@ function plotPoints(addressPoints, packets, svg, scale) {
 }
 
 function drawLines(addressPoints, packets, svg, scale) {
-    const stroke = 0.1;
+    const stroke = 5;
 
     const lines = svg.selectAll('line').data(packets).enter()
         .append('line').attr('y1', d => {
@@ -136,8 +170,10 @@ function drawLines(addressPoints, packets, svg, scale) {
              points = addressPoints[add];
              return scale(points["x"]);
         })
-        .style('stroke', 'lightgreen').style('stroke-width', d => {
-            return stroke*d['size'];
+        .style('stroke', d => {
+            return d['colour']
+        }).style('stroke-width', d => {
+            return stroke;
         });
 
 }
