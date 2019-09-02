@@ -85,7 +85,7 @@ def pcap():
                 
             delta = newTime - oldTime
 
-            if delta.seconds >= 5:
+            if delta.seconds >= 2:
                 oldTime = newTime
                 time = str(oldTime)
                 packets[time] = []
