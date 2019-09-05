@@ -48,7 +48,7 @@ function showDataOnPage(json) {
         .attr('width', svgSize)
         .attr('height', svgSize);
         
-        setFilters(svg);
+        //setFilters(svg);
 
         plotPoints(addressPoints, packets, svg, scale);
         drawLines(addressPoints, packets, svg, scale);
@@ -116,7 +116,7 @@ function checkPacketSimilarity(packet1, packet2) {
 
 function plotPoints(addressPoints, packets, svg, scale) {
     
-    const circSize = 5;
+    const circSize = 7.5;
 
     const circles = svg.selectAll('circle').data(packets).enter();
         
@@ -146,7 +146,7 @@ function plotPoints(addressPoints, packets, svg, scale) {
         })
         .attr('r', () => {
             return circSize;
-        })
+        });
 
 }
 
@@ -160,38 +160,12 @@ function drawLines(addressPoints, packets, svg, scale) {
             return 'black';
         })
         .attr('stroke-width', stroke)
-        .attr('fill', 'none')
-        .attr('filter', d => {
+        .attr('fill', 'none');
+
+        //For the blur
+        /*.attr('filter', d => {
             return d['filter'];
-        });
-
-   /* const lines = svg.selectAll('line').data(packets).enter()
-        .append('line').attr('y1', d => {
-             add = d["src"];
-             points = addressPoints[add];
-             return scale(points["y"]);
-        })
-        .attr('x1', d => {
-             add = d["src"];
-             points = addressPoints[add];
-             return scale(points["x"]);
-        })
-        .attr('y2', d => {
-             add = d["dst"];
-             points = addressPoints[add];
-             return scale(points["y"]);
-        })
-        .attr('x2', d => {
-             add = d["dst"];
-             points = addressPoints[add];
-             return scale(points["x"]);
-        })
-        .style('stroke', d => {
-            return d['colour']
-        }).style('stroke-width', d => {
-            return stroke;
         });*/
-
 }
 
 function getAddressPoints(addresses) {
@@ -216,16 +190,46 @@ function getAddressPoints(addresses) {
 function getLinePath(d, addressPoints, scale) {
     let src = d['src'];
     let dst = d['dst'];
-
     let addPointsSrc = addressPoints[src];
     let addPointsDst = addressPoints[dst];
 
-    let y1 = scale(addPointsSrc['y']);
-    let x1 = scale(addPointsSrc['x']);
-    let y2 = scale(addPointsDst['y']);
-    let x2 = scale(addPointsDst['x']);
+    let arrSrc = [scale(addPointsSrc['x']), scale(addPointsSrc['y'])];
+    let arrDst = [scale(addPointsDst['x']), scale(addPointsDst['y'])];
+    let maxPeakHeight, minDistance;
+    
+       if (d['size'] < 2) {
+           maxPeakHeight = 10;
+           minDistance = 10;
+       }
+       if (d["size"] >= 2 && d["size"] < 5) {
+           maxPeakHeight = 0.5;
+           minDistance = 50;
+       }       
+       if (d["size"] >= 5 && d["size"] < 10) {
+           maxPeakHeight = 0.1;
+           minDistance = 50;
+       }
+       if (d["size"] > 10) {
+           let y1 = scale(addPointsSrc["y"]);
+           let x1 = scale(addPointsSrc["x"]);
+           let y2 = scale(addPointsDst["y"]);
+           let x2 = scale(addPointsDst["x"]);
 
-    return "M " + x1 + " " + y1 + " " + "L " + x2 + " " + y2
+        return "M " + x1 + " " + y1 + " " + "L " + x2 + " " + y2;
+       }
+
+
+       let path = "M ";
+       const points = createJaggedPoints(arrSrc, arrDst, maxPeakHeight, minDistance);
+       for (let index = 0; index < points.length; index++) {
+           const [x, y] = points[index];
+           if(index === 0) {
+               path = path + x + " " + y;
+           } else {
+               path = path + " L " + x + " " + y;
+           }
+       }
+       return path;
 }
 
 function setFilters(svg) {
