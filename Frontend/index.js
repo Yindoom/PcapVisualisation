@@ -34,7 +34,7 @@ function showDataOnPage(json) {
     const data = JSON.parse(json);
     const addressPoints = getAddressPoints(data['addresses']);
     const packetsCollection = data['packets'];
-    const packetsKeys = Object.keys(data['packets']);
+    const packetsKeys = Object.keys(packetsCollection);
 
     const svgSize = 500;
 
@@ -42,17 +42,20 @@ function showDataOnPage(json) {
     scale.domain([0, 1]).range([10, svgSize - 10]);
 
     packetsKeys.forEach(key => {
-        let packets = getPacketsWithStrokeSize(packetsCollection[key]);
+        let packets = filterPackets(packetsCollection[key]);
         
         let svg = d3.select('body').append('svg')
         .attr('width', svgSize)
         .attr('height', svgSize);
+        
+        setFilters(svg);
+
         plotPoints(addressPoints, packets, svg, scale);
         drawLines(addressPoints, packets, svg, scale);
     });
 }
 
-function getPacketsWithStrokeSize(packets) {
+function filterPackets(packets) {
     let checkedPackets = [];
     packets.forEach(packet1 => {
     
@@ -68,15 +71,16 @@ function getPacketsWithStrokeSize(packets) {
 
         if(!checked) {
             let size = 0;
-            let colourRef = 0;
+            let numberOfSimilarPackets = 0;
             packets.forEach(packet2 => {
                 if (checkPacketSimilarity(packet1, packet2)){
                     size += 0.1;
-                    colourRef++;
+                    numberOfSimilarPackets++;
                 }
             });
             packet1['size'] = size;
-            packet1['colour'] = getLineColour(colourRef);
+            packet1['colour'] = getLineColour(numberOfSimilarPackets);
+            packet1['filter'] = getFilter(numberOfSimilarPackets)
             checkedPackets.push(packet1);
         }
     })
@@ -84,7 +88,7 @@ function getPacketsWithStrokeSize(packets) {
 }
 
 function getLineColour(colourRef) {
-    debugger;
+
     const colourSelection = colourConf4();
     if(colourRef < 2) 
         return colourSelection['low'];
@@ -149,7 +153,19 @@ function plotPoints(addressPoints, packets, svg, scale) {
 function drawLines(addressPoints, packets, svg, scale) {
     const stroke = 5;
 
-    const lines = svg.selectAll('line').data(packets).enter()
+    const path = svg.selectAll('path').data(packets).enter()
+        .append('path').attr('d', d => {
+            return getLinePath(d, addressPoints, scale);
+        }).attr('stroke', d => {
+            return 'black';
+        })
+        .attr('stroke-width', stroke)
+        .attr('fill', 'none')
+        .attr('filter', d => {
+            return d['filter'];
+        });
+
+   /* const lines = svg.selectAll('line').data(packets).enter()
         .append('line').attr('y1', d => {
              add = d["src"];
              points = addressPoints[add];
@@ -174,7 +190,7 @@ function drawLines(addressPoints, packets, svg, scale) {
             return d['colour']
         }).style('stroke-width', d => {
             return stroke;
-        });
+        });*/
 
 }
 
@@ -195,4 +211,84 @@ function getAddressPoints(addresses) {
     addressPoints[addresses[0]] = {'y': 0.5, 'x': 0.5};
 
     return addressPoints;
+}
+
+function getLinePath(d, addressPoints, scale) {
+    let src = d['src'];
+    let dst = d['dst'];
+
+    let addPointsSrc = addressPoints[src];
+    let addPointsDst = addressPoints[dst];
+
+    let y1 = scale(addPointsSrc['y']);
+    let x1 = scale(addPointsSrc['x']);
+    let y2 = scale(addPointsDst['y']);
+    let x2 = scale(addPointsDst['x']);
+
+    return "M " + x1 + " " + y1 + " " + "L " + x2 + " " + y2
+}
+
+function setFilters(svg) {
+
+    defs = svg.append("defs");
+
+    let filter = defs
+      .append("filter")
+      .attr("id", "low")
+      .append("feGaussianBlur")
+      .attr("class", "blur")
+      .attr("stdDeviation", "8")
+      .attr("result", "coloredBlur");
+
+    let feMerge = filter.append("feMerge");
+        feMerge.append("feMergeNode").attr("in", "coloredBlur");
+        feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+    filter = defs
+      .append("filter")
+      .attr("id", "lowMedium")
+      .append("feGaussianBlur")
+      .attr("class", "blur")
+      .attr("stdDeviation", "5")
+      .attr("result", "coloredBlur");
+
+    feMerge = filter.append("feMerge");
+    feMerge.append("feMergeNode").attr("in", "coloredBlur");
+    feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+    filter = defs
+        .append("filter")
+        .attr("id", "medium")
+        .append("feGaussianBlur")
+        .attr("class", "blur")
+        .attr("stdDeviation", "3.5")
+        .attr("result", "coloredBlur");
+
+    feMerge = filter.append("feMerge");
+    feMerge.append("feMergeNode").attr("in", "coloredBlur");
+    feMerge.append("feMergeNode").attr("in", "SourceGraphic");    
+
+    filter = defs
+        .append("filter")
+        .attr("id", "highMedium")
+        .append("feGaussianBlur")
+        .attr("class", "blur")
+        .attr("stdDeviation", "2")
+        .attr("result", "coloredBlur");
+
+    feMerge = filter.append("feMerge");
+    feMerge.append("feMergeNode").attr("in", "coloredBlur");
+    feMerge.append("feMergeNode").attr("in", "SourceGraphic");    
+
+}
+
+function getFilter(numberOfSimilarPackets) {
+     if (numberOfSimilarPackets < 2) return "url(#low)";
+     if (numberOfSimilarPackets >= 2 && numberOfSimilarPackets < 5)
+       return "url(#lowMedium)";
+     if (numberOfSimilarPackets >= 5 && numberOfSimilarPackets < 10)
+       return "url(#medium)";
+     if (numberOfSimilarPackets >= 10 && numberOfSimilarPackets < 20)
+       return "url(#highMedium)";
+     if (numberOfSimilarPackets >= 20) return "none";
 }
