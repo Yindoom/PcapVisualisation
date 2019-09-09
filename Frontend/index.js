@@ -79,6 +79,7 @@ function filterPackets(packets) {
                 }
             });
             packet1['size'] = size;
+            packet1['connections'] = numberOfSimilarPackets;
             packet1['colour'] = getLineColour(numberOfSimilarPackets);
             packet1['filter'] = getFilter(numberOfSimilarPackets)
             checkedPackets.push(packet1);
@@ -196,26 +197,24 @@ function getLinePath(d, addressPoints, scale) {
     let arrSrc = [scale(addPointsSrc['x']), scale(addPointsSrc['y'])];
     let arrDst = [scale(addPointsDst['x']), scale(addPointsDst['y'])];
     let maxPeakHeight, minDistance;
-    
-       if (d['size'] < 2) {
-           maxPeakHeight = 10;
-           minDistance = 10;
+    let number = d['connections']
+    debugger;
+       if (number < 2) {
+         maxPeakHeight = 5;
+         minDistance = 1;
        }
-       if (d["size"] >= 2 && d["size"] < 5) {
-           maxPeakHeight = 0.5;
-           minDistance = 50;
+       if (number >= 2 && number < 5) {
+         maxPeakHeight = 2.5;
+         minDistance = 2;
        }       
-       if (d["size"] >= 5 && d["size"] < 10) {
-           maxPeakHeight = 0.1;
-           minDistance = 50;
+       if (number >= 5 && number <= 10) {
+         maxPeakHeight = 2.5;
+         minDistance = 5;
        }
-       if (d["size"] > 10) {
-           let y1 = scale(addPointsSrc["y"]);
-           let x1 = scale(addPointsSrc["x"]);
-           let y2 = scale(addPointsDst["y"]);
-           let x2 = scale(addPointsDst["x"]);
-
-        return "M " + x1 + " " + y1 + " " + "L " + x2 + " " + y2;
+       if (number > 10) {
+         const [x1, y1] = arrSrc,
+           [x2, y2] = arrDst;
+         return "M " + x1 + " " + y1 + " " + "L " + x2 + " " + y2;
        }
 
 
