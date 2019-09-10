@@ -48,9 +48,10 @@ function showDataOnPage(json) {
         .attr('width', svgSize)
         .attr('height', svgSize);
         
-        //setFilters(svg);
+        setFilters(svg);
 
-        plotPoints(addressPoints, packets, svg, scale);
+        //plotPoints(addressPoints, packets, svg, scale);
+        drawHouses(addressPoints, packets, svg, scale);
         drawLines(addressPoints, packets, svg, scale);
     });
 }
@@ -119,6 +120,7 @@ function plotPoints(addressPoints, packets, svg, scale) {
     
     const circSize = 7.5;
 
+
     const circles = svg.selectAll('circle').data(packets).enter();
         
     circles.append('circle').attr('cx', d => {
@@ -154,19 +156,19 @@ function plotPoints(addressPoints, packets, svg, scale) {
 function drawLines(addressPoints, packets, svg, scale) {
     const stroke = 5;
 
-    const path = svg.selectAll('path').data(packets).enter()
+    const path = svg.selectAll('path').filter('.line').data(packets).enter()
         .append('path').attr('d', d => {
             return getLinePath(d, addressPoints, scale);
         }).attr('stroke', d => {
             return 'black';
         })
         .attr('stroke-width', stroke)
-        .attr('fill', 'none');
+        .attr('fill', 'none')
 
         //For the blur
-        /*.attr('filter', d => {
+        .attr('filter', d => {
             return d['filter'];
-        });*/
+        }).attr('class', 'line');
 }
 
 function getAddressPoints(addresses) {
@@ -240,7 +242,7 @@ function setFilters(svg) {
       .attr("id", "low")
       .append("feGaussianBlur")
       .attr("class", "blur")
-      .attr("stdDeviation", "8")
+      .attr("stdDeviation", "3")
       .attr("result", "coloredBlur");
 
     let feMerge = filter.append("feMerge");
@@ -252,7 +254,7 @@ function setFilters(svg) {
       .attr("id", "lowMedium")
       .append("feGaussianBlur")
       .attr("class", "blur")
-      .attr("stdDeviation", "5")
+      .attr("stdDeviation", "2")
       .attr("result", "coloredBlur");
 
     feMerge = filter.append("feMerge");
@@ -264,7 +266,7 @@ function setFilters(svg) {
         .attr("id", "medium")
         .append("feGaussianBlur")
         .attr("class", "blur")
-        .attr("stdDeviation", "3.5")
+        .attr("stdDeviation", "1")
         .attr("result", "coloredBlur");
 
     feMerge = filter.append("feMerge");
@@ -276,7 +278,7 @@ function setFilters(svg) {
         .attr("id", "highMedium")
         .append("feGaussianBlur")
         .attr("class", "blur")
-        .attr("stdDeviation", "2")
+        .attr("stdDeviation", "0.5")
         .attr("result", "coloredBlur");
 
     feMerge = filter.append("feMerge");
@@ -294,4 +296,88 @@ function getFilter(numberOfSimilarPackets) {
      if (numberOfSimilarPackets >= 10 && numberOfSimilarPackets < 20)
        return "url(#highMedium)";
      if (numberOfSimilarPackets >= 20) return "none";
+}
+
+function drawHouses(addressPoints, packets, svg, scale) {
+     
+    const shapeSize = 20;
+
+    const rects = svg
+      .selectAll("rect")
+      .data(packets)
+      .enter();
+
+    const roof = svg.selectAll('path').filter('.roof').data(packets).enter();
+
+    rects
+      .append("rect")
+      .attr("x", d => {
+        add = d["src"];
+        points = addressPoints[add];
+        return scale(points["x"]) - shapeSize;
+      })
+      .attr("y", d => {
+        add = d["src"];
+        points = addressPoints[add];
+        return scale(points["y"]) - shapeSize;
+      })
+      .attr("height", shapeSize * 2)
+      .attr("width", shapeSize * 2);
+
+    rects
+      .append("rect")
+      .attr("x", d => {
+        add = d["dst"];
+        points = addressPoints[add];
+        return scale(points["x"]) - shapeSize;
+      })
+      .attr("y", d => {
+        add = d["dst"];
+        points = addressPoints[add];
+        return scale(points["y"]) - shapeSize;
+      })
+      .attr("height", shapeSize * 2)
+      .attr("width", shapeSize * 2);
+
+      roof.append('path').attr('d', d => {
+          let path = "M ";
+          let x1 = scale(addressPoints[d['src']]['x']);
+          let y1 = scale(addressPoints[d["src"]]["y"]);
+          let x2 = scale(addressPoints[d["dst"]]["x"]);
+          let y2 = scale(addressPoints[d["dst"]]["y"]);
+
+          path =
+            path +
+            (x1 - (shapeSize*1.5)) +
+            " " +
+            (y1 - shapeSize) +
+            " L " +
+            x1 +
+            " " +
+            (y1 - (shapeSize * 2)) +
+            " L " +
+            (x1 + (shapeSize*1.5)) +
+            " " +
+            (y1 - shapeSize) +
+            " ";
+
+
+          path =
+            path + "M " +
+            (x2 - (shapeSize*1.5)) +
+            " " +
+            (y2 - shapeSize) +
+            " L " +
+            x2 +
+            " " +
+            (y2 - (shapeSize * 2)) +
+            " L " +
+            (x2 + (shapeSize*1.5)) +
+            " " +
+            (y2 - shapeSize) +
+            " ";
+
+            return path;
+
+      }).attr('fill', 'black').attr('class', 'roof');
 }
