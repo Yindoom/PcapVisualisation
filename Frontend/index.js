@@ -162,13 +162,6 @@ function drawLines(addressPoints, packets, svg, scale) {
     .data(packets)
     .enter();
 
-  const clipPath = path
-    .append("clipPath")
-    .attr("fill", "green")
-    .attr("d", d => {
-      return getLinePath(d, addressPoints, scale);
-    });
-
   path
     .append("path")
     .attr("d", d => {
@@ -184,7 +177,6 @@ function drawLines(addressPoints, packets, svg, scale) {
     .attr("filter", d => {
       return d["filter"];
     })
-    .attr("clip-path", clipPath)
     .attr("class", "line");
 }
 
@@ -198,10 +190,16 @@ function getAddressPoints(addresses) {
       y = Math.random();
     } while (x < 0.6 && x > 0.4 && y < 0.6 && y > 0.4);
 
-    addressPoints[address] = { y: y, x: x };
+    addressPoints[address] = {
+      y: y,
+      x: x
+    };
   });
 
-  addressPoints[addresses[0]] = { y: 0.5, x: 0.5 };
+  addressPoints[addresses[0]] = {
+    y: 0.5,
+    x: 0.5
+  };
 
   return addressPoints;
 }
@@ -408,55 +406,61 @@ function setNoiseFilters(svg) {
     .append("filter")
     .attr("id", "low")
     .append("feTurbulence")
-    .attr("type", "turbulence")
+    .attr("type", "fractalNoise")
     .attr("baseFrequency", 0.3)
-    .attr("numOctaves", 2)
+    //.attr("numOctaves", 2)
     .attr("result", "noisy");
 
-  let feBlend = filter
-    .append("feBlend")
-    .attr("in", "SourceGraphic")
-    .attr("in2", "noisy");
+  let feMerge = filter.append("feMerge");
+  feMerge.append("feMergeNode").attr("in", "noisy");
+  feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+  let feColourMatrix = filter
+    .append("feColorMatrix")
+    .attr("type", "saturate")
+    .attr("values", "0");
 
   filter = defs
     .append("filter")
     .attr("id", "lowMedium")
     .append("feTurbulence")
-    .attr("type", "turbulence")
+    .attr("type", "fractalNoise")
     .attr("baseFrequency", 0.25)
-    .attr("numOctaves", 2)
+    // .attr("numOctaves", 2)
     .attr("result", "noisy");
 
-  feBlend = filter
-    .append("feBlend")
-    .attr("in", "SourceGraphic")
-    .attr("in2", "noisy");
+  feMerge = filter.append("feMerge");
+  feMerge.append("feMergeNode").attr("in", "noisy");
+  feMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
   filter = defs
     .append("filter")
     .attr("id", "medium")
     .append("feTurbulence")
-    .attr("type", "turbulence")
+    .attr("type", "fractalNoise")
     .attr("baseFrequency", 0.2)
-    .attr("numOctaves", 2)
+    // .attr("numOctaves", 2)
     .attr("result", "noisy");
 
-  feBlend = filter
-    .append("feBlend")
-    .attr("in", "SourceGraphic")
-    .attr("in2", "noisy");
+  feMerge = filter.append("feMerge");
+  feMerge.append("feMergeNode").attr("in", "noisy");
+  feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+  /*feColourMatrix = filter
+        .append("feColorMatrix")
+        .attr("type", "saturate")
+        .attr("values", "0");*/
 
   filter = defs
     .append("filter")
     .attr("id", "highMedium")
     .append("feTurbulence")
-    .attr("type", "turbulence")
+    .attr("type", "fractalNoise")
     .attr("baseFrequency", 0.125)
-    .attr("numOctaves", 2)
+    //.attr("numOctaves", 2)
     .attr("result", "noisy");
 
-  feBlend = filter
-    .append("feBlend")
-    .attr("in", "SourceGraphic")
-    .attr("in2", "noisy");
+  feMerge = filter.append("feMerge");
+  feMerge.append("feMergeNode").attr("in", "noisy");
+  feMerge.append("feMergeNode").attr("in", "SourceGraphic");
 }
