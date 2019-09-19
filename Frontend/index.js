@@ -37,25 +37,29 @@ function showDataOnPage(json) {
   const packetsCollection = data["packets"];
   const packetsKeys = Object.keys(packetsCollection);
 
-  const svgSize = 500;
+  const svgSize = 900;
 
   const scale = d3.scaleLinear();
-  scale.domain([0, 1]).range([10, svgSize - 10]);
+  scale.domain([0, 1]).range([50, svgSize - 50]);
 
+  let count = 0;
   packetsKeys.forEach(key => {
+    count++;
     let packets = filterPackets(packetsCollection[key]);
 
     let svg = d3
       .select("body")
       .append("svg")
       .attr("width", svgSize)
-      .attr("height", svgSize);
+      .attr("height", svgSize)
+      .attr('id', count);
 
-    //setBlurFilters(svg);
-    setNoiseFilters(svg);
-    //plotPoints(addressPoints, packets, svg, scale);
-    drawHouses(addressPoints, packets, svg, scale);
+    setBlurFilters(svg);
+    //setNoiseFilters(svg);
+    //setSaturationFilters(svg);
+    plotPoints(addressPoints, packets, svg, scale);
     drawLines(addressPoints, packets, svg, scale);
+    //drawHouses(addressPoints, packets, svg, scale);
   });
 }
 
@@ -92,7 +96,7 @@ function filterPackets(packets) {
 }
 
 function getLineColour(colourRef) {
-  const colourSelection = colourConf4();
+  const colourSelection = colourRedToGrey();
   if (colourRef < 2) return colourSelection["low"];
   if (colourRef >= 2 && colourRef < 5) return colourSelection["lowMedium"];
   if (colourRef >= 5 && colourRef < 10) return colourSelection["medium"];
@@ -110,98 +114,6 @@ function checkPacketSimilarity(packet1, packet2) {
   }
 
   return false;
-}
-
-function plotPoints(addressPoints, packets, svg, scale) {
-  const circSize = 7.5;
-
-  const circles = svg
-    .selectAll("circle")
-    .data(packets)
-    .enter();
-
-  circles
-    .append("circle")
-    .attr("cx", d => {
-      add = d["src"];
-      points = addressPoints[add];
-      return scale(points["x"]);
-    })
-    .attr("cy", d => {
-      add = d["src"];
-      points = addressPoints[add];
-      return scale(points["y"]);
-    })
-    .attr("r", () => {
-      return circSize;
-    });
-
-  circles
-    .append("circle")
-    .attr("cx", d => {
-      add = d["dst"];
-      points = addressPoints[add];
-      return scale(points["x"]);
-    })
-    .attr("cy", d => {
-      add = d["dst"];
-      points = addressPoints[add];
-      return scale(points["y"]);
-    })
-    .attr("r", () => {
-      return circSize;
-    });
-}
-
-function drawLines(addressPoints, packets, svg, scale) {
-  const stroke = 5;
-
-  const path = svg
-    .selectAll("path")
-    .filter(".line")
-    .data(packets)
-    .enter();
-
-  const arr = [];
-
-  const clipPath = svg
-    .select("defs")
-    .selectAll("clip-path")
-    .data(packets)
-    .enter();
-  clipPath
-    .append("clip-path")
-    .append("path")
-    .attr("d", d => {
-      let path = getLinePath(d, addressPoints, scale);
-      // path = path + " Z";
-      return path;
-    })
-    .attr("id", () => {
-      let r = Math.random()
-        .toString(36)
-        .substring(7);
-      arr.push(r);
-      return r;
-    });
-
-  path
-    .append("path")
-    .attr("d", d => {
-      return getLinePath(d, addressPoints, scale);
-    })
-    .attr("stroke", d => {
-      return "black";
-    })
-    .attr("stroke-width", stroke)
-    .attr("fill", "none")
-
-    //For the filter
-    .attr("filter", d => {
-      return d["filter"];
-    })
-    .attr("clip-path", "url(#" + arr.shift() + ")")
-    .attr("class", "line");
 }
 
 function getAddressPoints(addresses) {
@@ -228,287 +140,5 @@ function getAddressPoints(addresses) {
   return addressPoints;
 }
 
-function getLinePath(d, addressPoints, scale) {
-  let src = d["src"];
-  let dst = d["dst"];
-  let addPointsSrc = addressPoints[src];
-  let addPointsDst = addressPoints[dst];
-
-  let arrSrc = [scale(addPointsSrc["x"]), scale(addPointsSrc["y"])];
-  let arrDst = [scale(addPointsDst["x"]), scale(addPointsDst["y"])];
-  let maxPeakHeight, minDistance;
-  let number = d["connections"];
-  debugger;
-  if (number < 2) {
-    maxPeakHeight = 5;
-    minDistance = 1;
-  }
-  if (number >= 2 && number < 5) {
-    maxPeakHeight = 2.5;
-    minDistance = 2;
-  }
-  if (number >= 5 && number <= 10) {
-    maxPeakHeight = 2.5;
-    minDistance = 5;
-  }
-  if (number > 10) {
-    const [x1, y1] = arrSrc,
-      [x2, y2] = arrDst;
-    return "M " + x1 + " " + y1 + " " + "L " + x2 + " " + y2;
-  }
-
-  let path = "M ";
-  const points = createJaggedPoints(arrSrc, arrDst, maxPeakHeight, minDistance);
-  for (let index = 0; index < points.length; index++) {
-    const [x, y] = points[index];
-    if (index === 0) {
-      path = path + x + " " + y;
-    } else {
-      path = path + " L " + x + " " + y;
-    }
-  }
-  return path;
-}
-
-function setBlurFilters(svg) {
-  defs = svg.append("defs");
-
-  let filter = defs
-    .append("filter")
-    .attr("id", "low")
-    .append("feGaussianBlur")
-    .attr("class", "blur")
-    .attr("stdDeviation", "3")
-    .attr("result", "coloredBlur");
-
-  let feMerge = filter.append("feMerge");
-  feMerge.append("feMergeNode").attr("in", "coloredBlur");
-  feMerge.append("feMergeNode").attr("in", "SourceGraphic");
-
-  filter = defs
-    .append("filter")
-    .attr("id", "lowMedium")
-    .append("feGaussianBlur")
-    .attr("class", "blur")
-    .attr("stdDeviation", "2")
-    .attr("result", "coloredBlur");
-
-  feMerge = filter.append("feMerge");
-  feMerge.append("feMergeNode").attr("in", "coloredBlur");
-  feMerge.append("feMergeNode").attr("in", "SourceGraphic");
-
-  filter = defs
-    .append("filter")
-    .attr("id", "medium")
-    .append("feGaussianBlur")
-    .attr("class", "blur")
-    .attr("stdDeviation", "1")
-    .attr("result", "coloredBlur");
-
-  feMerge = filter.append("feMerge");
-  feMerge.append("feMergeNode").attr("in", "coloredBlur");
-  feMerge.append("feMergeNode").attr("in", "SourceGraphic");
-
-  filter = defs
-    .append("filter")
-    .attr("id", "highMedium")
-    .append("feGaussianBlur")
-    .attr("class", "blur")
-    .attr("stdDeviation", "0.5")
-    .attr("result", "coloredBlur");
-
-  feMerge = filter.append("feMerge");
-  feMerge.append("feMergeNode").attr("in", "coloredBlur");
-  feMerge.append("feMergeNode").attr("in", "SourceGraphic");
-}
-
-function getFilter(numberOfSimilarPackets) {
-  if (numberOfSimilarPackets < 2) return "url(#low)";
-  if (numberOfSimilarPackets >= 2 && numberOfSimilarPackets < 5)
-    return "url(#lowMedium)";
-  if (numberOfSimilarPackets >= 5 && numberOfSimilarPackets < 10)
-    return "url(#medium)";
-  if (numberOfSimilarPackets >= 10 && numberOfSimilarPackets < 20)
-    return "url(#highMedium)";
-  if (numberOfSimilarPackets >= 20) return "none";
-}
-
-function drawHouses(addressPoints, packets, svg, scale) {
-  const shapeSize = 20;
-
-  const rects = svg
-    .selectAll("rect")
-    .data(packets)
-    .enter();
-
-  const roof = svg
-    .selectAll("path")
-    .filter(".roof")
-    .data(packets)
-    .enter();
-
-  rects
-    .append("rect")
-    .attr("x", d => {
-      add = d["src"];
-      points = addressPoints[add];
-      return scale(points["x"]) - shapeSize;
-    })
-    .attr("y", d => {
-      add = d["src"];
-      points = addressPoints[add];
-      return scale(points["y"]) - shapeSize;
-    })
-    .attr("height", shapeSize * 2)
-    .attr("width", shapeSize * 2);
-
-  rects
-    .append("rect")
-    .attr("x", d => {
-      add = d["dst"];
-      points = addressPoints[add];
-      return scale(points["x"]) - shapeSize;
-    })
-    .attr("y", d => {
-      add = d["dst"];
-      points = addressPoints[add];
-      return scale(points["y"]) - shapeSize;
-    })
-    .attr("height", shapeSize * 2)
-    .attr("width", shapeSize * 2);
-
-  roof
-    .append("path")
-    .attr("d", d => {
-      let path = "M ";
-      let x1 = scale(addressPoints[d["src"]]["x"]);
-      let y1 = scale(addressPoints[d["src"]]["y"]);
-      let x2 = scale(addressPoints[d["dst"]]["x"]);
-      let y2 = scale(addressPoints[d["dst"]]["y"]);
-
-      path =
-        path +
-        (x1 - shapeSize * 1.5) +
-        " " +
-        (y1 - shapeSize) +
-        " L " +
-        x1 +
-        " " +
-        (y1 - shapeSize * 2) +
-        " L " +
-        (x1 + shapeSize * 1.5) +
-        " " +
-        (y1 - shapeSize) +
-        " ";
-
-      path =
-        path +
-        "M " +
-        (x2 - shapeSize * 1.5) +
-        " " +
-        (y2 - shapeSize) +
-        " L " +
-        x2 +
-        " " +
-        (y2 - shapeSize * 2) +
-        " L " +
-        (x2 + shapeSize * 1.5) +
-        " " +
-        (y2 - shapeSize) +
-        " ";
-
-      return path;
-    })
-    .attr("fill", "black")
-    .attr("class", "roof");
-}
-
-function setNoiseFilters(svg) {
-  defs = svg.append("defs");
-
-  let filterLow = defs
-    .append("filter")
-    .attr("id", "low")
-    .append("feTurbulence")
-    .attr("type", "fractalNoise")
-    .attr("baseFrequency", 0.2)
-    .attr("numOctaves", 1)
-    .attr("stitchTiles", "noStitch")
-    .attr('seed', '0')
-    .attr("result", "f1");
-
-  let filterLowMed = defs
-    .append("filter")
-    .attr("id", "lowMedium")
-    .append("feTurbulence")
-    .attr("type", "fractalNoise")
-    .attr("baseFrequency", 0.4)
-    .attr("numOctaves", 1)
-    .attr("stitchTiles", "noStitch")
-    .attr("seed", "0")
-    .attr("result", "f1");
-
-  let filterMed = defs
-    .append("filter")
-    .attr("id", "medium")
-    .append("feTurbulence")
-    .attr("type", "fractalNoise")
-    .attr("baseFrequency", 0.6)
-    .attr("numOctaves", 1)
-    .attr("stitchTiles", "noStitch")
-    .attr("seed", "0")
-    .attr("result", "f1");
 
 
-  let filterHighMed = defs
-    .append("filter")
-    .attr("id", "highMedium")
-    .append("feTurbulence")
-    .attr("type", "fractalNoise")
-    .attr("baseFrequency", 1)
-    .attr("numOctaves", 1)
-    .attr("stitchTiles", "noStitch")
-    .attr("seed", "0")
-    .attr("result", "f1");
-
-    appendThings(filterLow);
-    appendThings(filterLowMed);
-    appendThings(filterMed);
-    appendThings(filterHighMed);
-}
-
-function appendThings(filter) {
-  filter
-    .append("feColorMatrix")
-    .attr("type", "matrix")
-    .attr("values", "-18 0 0 0 8     -18 0 0 0 8     -18 0 0 0 8     0 0 0 0 1")
-    .attr("in", "f1")
-    .attr("result", "f2");
-
-  filter
-    .append("feColorMatrix")
-    .attr("type", "luminanceToAlpha")
-    .attr("in", "f2")
-    .attr("result", "f3");
-
-  filter
-    .append("feComposite")
-    .attr("in", "SourceGraphic")
-    .attr("in2", "f3")
-    .attr("result", "f4")
-    .attr("operator", "in");
-
-  filter
-    .append("feColorMatrix")
-    .attr("type", "matrix")
-    .attr(
-      "values",
-      "1 0 0 0 0.22      0 1 0 0 0.22      0 0 1 0 0.22      0 0 0 1 0"
-    )
-    .attr("in", "f4")
-    .attr("result", "f5");
-
-  let feMerge = filter.append("feMerge");
-  feMerge.append("feMergeNode").attr("in", "SourceGraphic");
-  feMerge.append("feMergeNode").attr("in", "f5");
-}

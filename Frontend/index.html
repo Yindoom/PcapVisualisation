@@ -5,13 +5,7 @@
     <meta charset="UTF-8">
     <title>Visualisation of PCAP</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
-    <style>
-        circle {
-            fill: none;
-            stroke-width: 2px;
-            stroke: black;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 
 <body>
@@ -20,9 +14,10 @@
     <button id="button" onclick="readinput()">Read file</button>
 
     <div id="data"></div>
+    <script src="other/drawing.js"></script>
+    <script src="other/filters.js"></script>
     <script src="other/jaggedPath.js"></script>
     <script src="other/colours.js"></script>
     <script src="index.js"></script>
 </body>
-
 </html>
