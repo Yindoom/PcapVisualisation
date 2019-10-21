@@ -142,7 +142,6 @@ function setBlurFilters(svg) {
     .append("feGaussianBlur")
     .attr("class", "blur")
     .attr('stdDeviation', '20')
-    //.attr("stdDeviation", "3")
     .attr("result", "coloredBlur");
 
   let feMerge = filter.append("feMerge");

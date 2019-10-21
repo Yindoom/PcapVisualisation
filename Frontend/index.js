@@ -52,14 +52,16 @@ function showDataOnPage(json) {
       .append("svg")
       .attr("width", svgSize)
       .attr("height", svgSize)
-      .attr('id', count);
+      .attr("id", count);
 
     setBlurFilters(svg);
     //setNoiseFilters(svg);
     //setSaturationFilters(svg);
-    plotPoints(addressPoints, packets, svg, scale);
+
     drawLines(addressPoints, packets, svg, scale);
-    //drawHouses(addressPoints, packets, svg, scale);
+
+    //plotPoints(addressPoints, packets, svg, scale);
+    drawHouses(addressPoints, packets, svg, scale);
   });
 }
 
@@ -96,7 +98,7 @@ function filterPackets(packets) {
 }
 
 function getLineColour(colourRef) {
-  const colourSelection = colourRedToGrey();
+  const colourSelection = colourHSL240_120();
   if (colourRef < 2) return colourSelection["low"];
   if (colourRef >= 2 && colourRef < 5) return colourSelection["lowMedium"];
   if (colourRef >= 5 && colourRef < 10) return colourSelection["medium"];
@@ -139,6 +141,3 @@ function getAddressPoints(addresses) {
 
   return addressPoints;
 }
-
-
-

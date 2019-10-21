@@ -9,41 +9,37 @@ function plotPoints(addressPoints, packets, svg, scale) {
   circles
     .append("circle")
     .attr("cx", d => {
-      add = d["src"];
-      points = addressPoints[add];
+      src = d["src"];
+      dst = d["dst"];
+      points = addressPoints[src];
+      if (points["x"] === 0.5 && points["y"] === 0.5) {
+        return scale(addressPoints[dst]["x"]);
+      }
       return scale(points["x"]);
     })
     .attr("cy", d => {
-      add = d["src"];
-      points = addressPoints[add];
+      src = d["src"];
+      dst = d["dst"];
+      points = addressPoints[src];
+      if (points["x"] === 0.5 && points["y"] === 0.5) {
+        return scale(addressPoints[dst]["y"]);
+      }
       return scale(points["y"]);
     })
     .attr("r", () => {
       return circSize;
     })
-    .attr('stroke', d => {
-      return getCenterColour(d['src'], addressPoints);
-      //return 'black';
+    .attr("stroke", d => {
+      return "black";
     });
 
-  circles
+  svg
     .append("circle")
-    .attr("cx", d => {
-      add = d["dst"];
-      points = addressPoints[add];
-      return scale(points["x"]);
-    })
-    .attr("cy", d => {
-      add = d["dst"];
-      points = addressPoints[add];
-      return scale(points["y"]);
-    })
-    .attr("r", () => {
-      return circSize;
-    })
-    .attr('stroke', d => {
-      return getCenterColour(d['dst'], addressPoints);
-    });
+    .attr("cx", scale(0.5))
+    .attr("cy", scale(0.5))
+    .attr("r", circSize * 1.5)
+    .attr("fill", "green")
+    .attr("stroke", "green");
 }
 
 function drawLines(addressPoints, packets, svg, scale) {
@@ -60,17 +56,16 @@ function drawLines(addressPoints, packets, svg, scale) {
     .attr("d", d => {
       return getStraightPath(d, addressPoints, scale);
       //FOR JAGGED LINES
-      // return getLinePath(d, addressPoints, scale);
+      //return getLinePath(d, addressPoints, scale);
     })
     .attr("stroke", d => {
-
-      //let brightness = "hsl(100, 100%, " + d["connections"] + "%)";
-      //let saturation = "hsl(100, " + d["connections"] + "%, 50%)";
-      //let hue = "hsl(" + (d["connections"] % 360) + ", 100%, 50%)";
-      //return hue;
-      return 'black';
+      let brightness = "hsl(100, 0%, " + d["connections"] + "%)";
+      let saturation = "hsl(1, " + d["connections"] + "%, 50%)";
+      let hue = "hsl(" + (d["connections"] % 360) + ", 100%, 50%)";
+      d["colour"];
+      return "black";
     })
-    .attr("stroke-width", () => {
+    .attr("stroke-width", d => {
       return stroke;
     })
     .attr("fill", "none")
@@ -82,7 +77,6 @@ function drawLines(addressPoints, packets, svg, scale) {
     .attr("filter", d => {
       return d["filter"];
     })
-    //.attr("clip-path", "url(#" + arr.shift() + ")")
 
     .attr("class", "line");
 }
@@ -99,15 +93,15 @@ function getLinePath(d, addressPoints, scale) {
   let number = d["connections"];
 
   if (number < 2) {
-    maxPeakHeight = 5;
-    minDistance = 1;
+    maxPeakHeight = 30;
+    minDistance = 10;
   }
   if (number >= 2 && number < 5) {
-    maxPeakHeight = 2.5;
-    minDistance = 2;
+    maxPeakHeight = 10;
+    minDistance = 10;
   }
   if (number >= 5 && number <= 10) {
-    maxPeakHeight = 2.5;
+    maxPeakHeight = 1;
     minDistance = 5;
   }
   if (number > 10) {
@@ -161,7 +155,6 @@ function getRoof(x, y, shapeSize) {
 }
 
 function getCenterColour(data, addressPoints) {
-  debugger;
   x = addressPoints[data]["x"];
   y = addressPoints[data]["y"];
 
@@ -217,7 +210,7 @@ function drawHouses(addressPoints, packets, svg, scale) {
     .attr("height", shapeSize * 2)
     .attr("width", shapeSize * 2)
     .attr("fill", d => {
-      return getHouseColour(d["dst"], addressPoints);
+      return getCenterColour(d["dst"], addressPoints);
     });
 
   roof
@@ -229,7 +222,7 @@ function drawHouses(addressPoints, packets, svg, scale) {
       return getRoof(x1, y1, shapeSize);
     })
     .attr("fill", d => {
-      return getHouseColour(d["src"], addressPoints);
+      return getCenterColour(d["src"], addressPoints);
     })
     .attr("class", "roof");
 
@@ -242,6 +235,6 @@ function drawHouses(addressPoints, packets, svg, scale) {
       return getRoof(x2, y2, shapeSize);
     })
     .attr("fill", d => {
-      return getHouseColour(d["dst"], addressPoints);
+      return getCenterColour(d["dst"], addressPoints);
     });
 }

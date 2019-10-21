@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Visualisation of PCAP</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="other/jaggedPath.js"></script>
+</head>
+
+<body>
+    <svg id="canvas" width="500" height="500" style="margin-left: 200px" stroke="black" stroke-width="5" fill="none">
+        <!--<path d="M 0 0 M 500 500 M 100 250 L 400 250" stroke="black" stroke-width="5"></path> -->
+    </svg>
+    <script>
+        let path = "M 0 0 M 500 500 M 100 250 "
+        const points = createJaggedPoints([100, 250], [400, 250], 3.5, );
+        for (let index = 0; index < points.length; index++) {
+            const [x, y] = points[index];
+            if (index === 0) {
+                path = path + x + " " + y;
+            } else {
+                path = path + " L " + x + " " + y;
+            }
+        }
+        d3.select("svg").append('path').attr('d', path);
+    </script>
+</body>
+
+</html>

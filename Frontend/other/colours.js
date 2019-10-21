@@ -77,13 +77,62 @@ function colourConfBlueToGrey() {
   };
 }
 
+function colourHSL0_120() {
+   return {
+     high: "hsl(0, 100%, 50%)",
+     highMedium: "hsl(30, 100%, 50%)",
+     medium: "hsl(60, 100%, 50%)",
+     lowMedium: "hsl(90, 100%, 50%)",
+     low: "hsl(120, 100%, 50%)"
+   };
+}
 
-function colourConfBlueToGrey() {
+function colourHSL120_240() {
   return {
-    high: "#0000ff",
-    highMedium: "#242ddb",
-    medium: "#353aca",
-    lowMedium: "#4d5fb2",
-    low: "#808080"
+    high: "hsl(120, 100%, 50%)",
+    highMedium: "hsl(150, 100%, 50%)",
+    medium: "hsl(180, 100%, 50%)",
+    lowMedium: "hsl(210, 100%, 50%)",
+    low: "hsl(240, 100%, 50%)"
+  };
+}
+
+function colourHSL240_360() {
+  return {
+    high: "hsl(240, 100%, 50%)",
+    highMedium: "hsl(270, 100%, 50%)",
+    medium: "hsl(300, 100%, 50%)",
+    lowMedium: "hsl(330, 100%, 50%)",
+    low: "hsl(360, 100%, 50%)"
+  };
+}
+
+function colourHSL360_240() {
+  return {
+    low: "hsl(240, 100%, 50%)",
+    lowMedium: "hsl(270, 100%, 50%)",
+    medium: "hsl(300, 100%, 50%)",
+    highMedium: "hsl(330, 100%, 50%)",
+    high: "hsl(360, 100%, 50%)"
+  };
+}
+
+function colourHSL240_120() {
+  return {
+    low: "hsl(120, 100%, 50%)",
+    lowMedium: "hsl(150, 100%, 50%)",
+    medium: "hsl(180, 100%, 50%)",
+    highMedium: "hsl(210, 100%, 50%)",
+    high: "hsl(240, 100%, 50%)"
+  };
+}
+
+function colourHSL120_0() {
+  return {
+    low: "hsl(0, 100%, 50%)",
+    lowMedium: "hsl(30, 100%, 50%)",
+    medium: "hsl(60, 100%, 50%)",
+    highMedium: "hsl(90, 100%, 50%)",
+    high: "hsl(120, 100%, 50%)"
   };
 }

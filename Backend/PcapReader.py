@@ -42,7 +42,7 @@ def pcap():
         length = 0 
         time = 0
         for ts, buf in pcp:
-            length += 1         #shrug
+            length += 1        
             print(length)
 
             #I had some issues with a PCAP file that gave errors, 
